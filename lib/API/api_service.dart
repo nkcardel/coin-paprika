@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../Model/coins_info_model.dart';
 import '../Model/coins_list_model.dart';
 import 'constants.dart';
 
@@ -20,4 +21,19 @@ class APIService {
       return [];
     }
   }
+
+  static Future<CoinsInfoModel?> getCoinsInfo(String coinsID) async {
+    var response = await http.get(Uri.parse('${baseURI}coins/$coinsID'));
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = jsonDecode(response.body);
+      CoinsInfoModel coinsInfo = CoinsInfoModel.fromJson(data);
+      return coinsInfo;
+    } else {
+      print('Request failed with status: ${response.statusCode}.');
+      return null;
+    }
+  }
+
+
 }

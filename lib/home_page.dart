@@ -1,7 +1,7 @@
 import 'package:coin_paprika/API/api_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'Model/coins_info_model.dart';
 import 'Model/coins_list_model.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,20 +17,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    if (kDebugMode) {
-      print('Fetching coins list...');
-    }
     APIService.getCoinsList().then((value) {
       setState(() {
         coinsList = value;
       });
-      if (kDebugMode) {
-        print('Coins list fetched: ${coinsList.length} coins.');
-      }
-    }).catchError((error) {
-      if (kDebugMode) {
-        print('Error fetching coins list: $error');
-      }
     });
   }
 
@@ -42,26 +32,62 @@ class _HomePageState extends State<HomePage> {
       ),
       body: coinsList.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: coinsList.length,
-              itemBuilder: (BuildContext context, int index) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(coinsList[index].rank.toString()),
-                    SizedBox(width: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(coinsList[index].name ?? ""),
-                        Text(coinsList[index].symbol ?? ""),
-                      ],
-                    )
-                  ],
-                );
-              },
-            ),
+          : Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: ListView.separated(
+                itemCount: coinsList.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                itemBuilder: (BuildContext context, int index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 5,
+                            blurRadius: 7,
+                            offset: const Offset(2, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          FutureBuilder<CoinsInfoModel?>(
+                            future: APIService.getCoinsInfo(coinsList[index].id ?? ""),
+                            builder: (BuildContext context, AsyncSnapshot<CoinsInfoModel?> snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                                return Image(
+                                  image: NetworkImage(snapshot.data!.logo ?? ""),
+                                  width: 100,
+                                  height: 100,
+
+                                );
+                              } else {
+                                return const SizedBox(height: 100, width: 100);
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 20),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(coinsList[index].name ?? ""),
+                              Text(coinsList[index].symbol ?? ""),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ),
     );
   }
 }
