@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../Model/coins_chart_model.dart';
 import '../Model/coins_info_model.dart';
 import '../Model/coins_list_model.dart';
+import '../Model/coins_ticker_model.dart';
 import 'constants.dart';
 
 class APIService {
@@ -58,6 +59,19 @@ class APIService {
         print('Response data is not in the expected format: $data');
         return null;
       }
+    } else {
+      print('Request failed with status: ${response.statusCode}.');
+      return null;
+    }
+  }
+
+  static Future<CoinsTickerModel?> getCoinsTicker(String coinsID) async {
+    var response = await http.get(Uri.parse('${baseURI}ticker/$coinsID'));
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = jsonDecode(response.body);
+      CoinsTickerModel coinsTicker = CoinsTickerModel.fromJson(data);
+      return coinsTicker;
     } else {
       print('Request failed with status: ${response.statusCode}.');
       return null;

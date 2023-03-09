@@ -1,10 +1,12 @@
 import 'package:coin_paprika/API/api_service.dart';
+import 'package:coin_paprika/Model/coins_chart_model.dart';
 import 'package:coin_paprika/Screens/detail_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../Model/coins_info_model.dart';
 import '../Model/coins_list_model.dart';
+import '../Model/coins_ticker_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -55,7 +57,6 @@ class _HomePageState extends State<HomePage> {
                         Navigator.push(context,
                         MaterialPageRoute(builder: (context) => DetailScreen(
                           coinsID: coinsList[index].id ?? "",
-                          coinsLogo: coinsLogo ?? "",
                           coinsName: coinsList[index].name ?? "",
                           coinsSymbol: coinsList[index].symbol ?? "",)));
                       },
@@ -80,15 +81,14 @@ class _HomePageState extends State<HomePage> {
                               future: APIService.getCoinsInfo(coinsList[index].id ?? ""),
                               builder: (BuildContext context, AsyncSnapshot<CoinsInfoModel?> snapshot) {
                                 if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                                  coinsLogo = snapshot.data!.logo ?? "";
                                   return Image(
                                     image: NetworkImage(snapshot.data!.logo ?? ""),
-                                    width: 100,
-                                    height: 100,
+                                    width: 70,
+                                    height: 70,
 
                                   );
                                 } else {
-                                  return const SizedBox(height: 100, width: 100);
+                                  return const SizedBox(height: 70, width: 70);
                                 }
                               },
                             ),
@@ -100,7 +100,38 @@ class _HomePageState extends State<HomePage> {
                                 Text(coinsList[index].name ?? ""),
                                 Text(coinsList[index].symbol ?? ""),
                               ],
-                            )
+                            ),
+                            const SizedBox(width: 20),
+                            FutureBuilder<CoinsTickerModel?>(
+                              future: APIService.getCoinsTicker(coinsList[index].id ?? ""),
+                              builder: (BuildContext context, AsyncSnapshot<CoinsTickerModel?> snapshot) {
+                                if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text("USD ${double.parse(snapshot.data!.priceUsd ?? "").toStringAsFixed(2)}"),
+                                      FutureBuilder<CoinsChartModel?>(
+                                        future: APIService.getCoinsChart(coinsList[index].id ?? ""),
+                                        builder: (BuildContext context, AsyncSnapshot<CoinsChartModel?> snapshotChart) {
+                                          if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                                            return Text(
+                                                snapshot.data!.percentChange24h!.contains("-")
+                                                    ? "- ${snapshotChart.data!.low}"
+                                                    : "+ ${snapshotChart.data!.high}"
+                                            );
+                                          } else {
+                                            return const SizedBox(height: 0);
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return const SizedBox(height: 100, width: 100);
+                                }
+                              },
+                            ),
                           ],
                         ),
                       ),

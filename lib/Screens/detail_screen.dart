@@ -1,18 +1,18 @@
+import 'package:coin_paprika/Model/coins_info_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../API/api_service.dart';
 import '../Model/coins_chart_model.dart';
+import '../Model/coins_ticker_model.dart';
 
 class DetailScreen extends StatefulWidget {
   final String coinsID;
-  final String coinsLogo;
   final String coinsName;
   final String coinsSymbol;
   const DetailScreen({
     Key? key,
     required this.coinsID,
-    required this.coinsLogo,
     required this.coinsName,
     required this.coinsSymbol}) : super(key: key);
 
@@ -22,29 +22,35 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
 
+  CoinsInfoModel? coinsInfoModel;
   CoinsChartModel? coinsChartModel;
+  CoinsTickerModel? coinsTickerModel;
 
   @override
   void initState() {
     super.initState();
+
+    APIService.getCoinsInfo(widget.coinsID).then((value){
+      setState(() {
+        coinsInfoModel = value;
+      });
+    });
+
     APIService.getCoinsChart(widget.coinsID).then((value){
       setState(() {
         coinsChartModel = value;
+      });
+    });
+
+    APIService.getCoinsTicker(widget.coinsID).then((value){
+      setState(() {
+        coinsTickerModel = value;
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (kDebugMode) {
-      print("Details Screen");
-      print("coinsID: ${widget.coinsID}");
-      print("coinsLogo: ${widget.coinsLogo}");
-      print("coinsName: ${widget.coinsName}");
-      print("coinsSymbol: ${widget.coinsSymbol}");
-    }
-
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Back'),
@@ -72,7 +78,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Image(
-                          image: NetworkImage(widget.coinsLogo),
+                          image: NetworkImage(coinsInfoModel!.logo ?? ""),
                           width: 100,
                           height: 100,
                         ),
@@ -84,11 +90,12 @@ class _DetailScreenState extends State<DetailScreen> {
                       children: [
                         Text(widget.coinsName),
                         Text(widget.coinsSymbol),
+                        Text("USD ${double.parse(coinsTickerModel!.priceUsd!).toStringAsFixed(2)}"),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text("High: ${coinsChartModel!.high!.toStringAsFixed(2)}"),
-                    Text("Low: ${coinsChartModel!.low!.toStringAsFixed(2)}"),
+                    Text("High: + ${coinsChartModel!.high!.toStringAsFixed(2)}"),
+                    Text("Low: - ${coinsChartModel!.low!.toStringAsFixed(2)}"),
                     Text("Open: ${coinsChartModel!.open!.toStringAsFixed(2)}"),
                     Text("Close: ${coinsChartModel!.close!.toStringAsFixed(2)}"),
                     Text("Volume: ${coinsChartModel!.volume}"),
