@@ -1,4 +1,4 @@
-import 'package:coin_paprika/home_page.dart';
+import 'package:coin_paprika/Screens/home_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
