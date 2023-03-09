@@ -1,0 +1,1 @@
+const String baseURI = "https://api.coinpaprika.com/v1/";
