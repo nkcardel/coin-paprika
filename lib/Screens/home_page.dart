@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../Model/coins_info_model.dart';
 import '../Model/coins_list_model.dart';
 import '../Model/coins_ticker_model.dart';
+import '../custom_widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -33,7 +34,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PogiCoin'),
+        title: const HeadingText(text: 'PogiCoin'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: coinsList.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -52,7 +55,6 @@ class _HomePageState extends State<HomePage> {
                           print("Coins Logo - $coinsLogo");
                           print("Coins Name - ${coinsList[index].name}");
                           print("Coins Symbol - ${coinsList[index].symbol}");
-
                         }
                         Navigator.push(context,
                         MaterialPageRoute(builder: (context) => DetailScreen(
@@ -60,66 +62,56 @@ class _HomePageState extends State<HomePage> {
                           coinsName: coinsList[index].name ?? "",
                           coinsSymbol: coinsList[index].symbol ?? "",)));
                       },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 5,
-                              blurRadius: 7,
-                              offset: const Offset(2, 3),
-                            ),
-                          ],
-                        ),
+                      child: CustomContainer(
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            FutureBuilder<CoinsInfoModel?>(
-                              future: APIService.getCoinsInfo(coinsList[index].id ?? ""),
-                              builder: (BuildContext context, AsyncSnapshot<CoinsInfoModel?> snapshot) {
-                                if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                                  return Image(
-                                    image: NetworkImage(snapshot.data!.logo ?? ""),
-                                    width: 70,
-                                    height: 70,
-
-                                  );
-                                } else {
-                                  return const SizedBox(height: 70, width: 70);
-                                }
-                              },
-                            ),
-                            const SizedBox(width: 20),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Text(coinsList[index].name ?? ""),
-                                Text(coinsList[index].symbol ?? ""),
+                                FutureBuilder<CoinsInfoModel?>(
+                                  future: APIService.getCoinsInfo(coinsList[index].id ?? ""),
+                                  builder: (BuildContext context, AsyncSnapshot<CoinsInfoModel?> snapshot) {
+                                    if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                                      return Image(
+                                        image: NetworkImage(snapshot.data!.logo ?? ""),
+                                        width: 70,
+                                        height: 70,
+
+                                      );
+                                    } else {
+                                      return const SizedBox(height: 70, width: 70);
+                                    }
+                                  },
+                                ),
+                                const SizedBox(width: 20),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    RegularText(text: coinsList[index].name ?? ""),
+                                    RegularText(text: coinsList[index].symbol ?? ""),
+                                  ],
+                                ),
                               ],
                             ),
-                            const SizedBox(width: 20),
                             FutureBuilder<CoinsTickerModel?>(
                               future: APIService.getCoinsTicker(coinsList[index].id ?? ""),
                               builder: (BuildContext context, AsyncSnapshot<CoinsTickerModel?> snapshot) {
                                 if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text("USD ${double.parse(snapshot.data!.priceUsd ?? "").toStringAsFixed(2)}"),
+                                      RegularText(text: "USD ${double.parse(snapshot.data!.priceUsd ?? "").toStringAsFixed(2)}", fontSize: 15,),
                                       FutureBuilder<CoinsChartModel?>(
                                         future: APIService.getCoinsChart(coinsList[index].id ?? ""),
                                         builder: (BuildContext context, AsyncSnapshot<CoinsChartModel?> snapshotChart) {
                                           if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                                            return Text(
-                                                snapshot.data!.percentChange24h!.contains("-")
-                                                    ? "- ${snapshotChart.data!.low}"
-                                                    : "+ ${snapshotChart.data!.high}"
-                                            );
+                                            return (snapshot.data?.percentChange24h ?? "").contains("-")
+                                                ? RedText(text: "- ${snapshotChart.data!.low!.toStringAsFixed(2)}")
+                                                : GreenText(text: "+ ${snapshotChart.data!.high!.toStringAsFixed(2)}");
                                           } else {
                                             return const SizedBox(height: 0);
                                           }
@@ -128,7 +120,34 @@ class _HomePageState extends State<HomePage> {
                                     ],
                                   );
                                 } else {
-                                  return const SizedBox(height: 100, width: 100);
+                                  return const SizedBox(height: 0);
+                                }
+                              },
+                            ),
+                            FutureBuilder<CoinsTickerModel?>(
+                              future: APIService.getCoinsTicker(coinsList[index].id ?? ""),
+                              builder: (BuildContext context, AsyncSnapshot<CoinsTickerModel?> snapshot) {
+                                if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.show_chart_rounded),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          (snapshot.data?.percentChange24h ?? "").contains("-")
+                                              ? const Icon(Icons.arrow_downward_rounded, color: Colors.red)
+                                              : const Icon(Icons.arrow_upward_rounded, color: Colors.green),
+                                          (snapshot.data?.percentChange24h ?? "").contains("-")
+                                              ? RedText(text: "${snapshot.data!.percentChange24h ?? ""} %", fontSize: 15)
+                                              : GreenText(text: "+ ${snapshot.data!.percentChange24h ?? ""} %", fontSize: 15),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return const SizedBox(height: 0);
                                 }
                               },
                             ),
